@@ -17,6 +17,7 @@ def flip(sprites):
 
 def load_sprite_sheets(dir1, dir2, width, height, direction=False):
     path = join("assets", dir1, dir2)
+    print(f"Loading sprites from: {path}")
     images = [f for f in listdir(path) if isfile(join(path, f))]
 
     all_sprites = {}
@@ -111,6 +112,7 @@ class Player(pygame.sprite.Sprite):
         self.update_sprite()
 
     def landed(self):
+        print("Player landed!")
         self.fall_count = 0
         self.y_vel = 0
         self.jump_count = 0
@@ -196,6 +198,29 @@ class Fire(Object):
         if self.animation_count // self.ANIMATION_DELAY > len(sprites):
             self.animation_count = 0
 
+class StartCP(Object):
+    ANIMATION_DELAY = 3
+
+    def __init__(self, x, y, width, height):
+        super().__init__(x, y, width, height, "Start")
+        self.startcp = load_sprite_sheets("Items", "Checkpoints\Start", width, height)
+        self.image = self.startcp["Start (Moving) (64x64)"][0]
+        self.mask = pygame.mask.from_surface(self.image)
+        self.animation_count = 0
+        self.animation_name = "Start (Moving) (64x64)"
+
+    def loop(self):
+        sprites = self.startcp[self.animation_name]
+        sprite_index = (self.animation_count //
+                        self.ANIMATION_DELAY) % len(sprites)
+        self.image = sprites[sprite_index]
+        self.animation_count += 1
+     
+        self.mask = pygame.mask.from_surface(self.image)
+
+        if self.animation_count // self.ANIMATION_DELAY > len(sprites):
+            self.animation_count = 0
+
 def get_background(name):
     image = pygame.image.load(join("assets", "Background", name))
     _, _, width, height = image.get_rect()
@@ -222,6 +247,10 @@ def draw(window, background, bg_image, player, objects, offset_x):
 def handle_vertical_collision(player, objects, dy):
     collided_objects = []
     for obj in objects:
+
+        if isinstance(obj, StartCP):
+            continue
+      
         if pygame.sprite.collide_mask(player, obj):
             if dy > 0:
                 player.rect.bottom = obj.rect.top
@@ -239,6 +268,10 @@ def collide(player, objects, dx):
     player.update()
     collided_object = None
     for obj in objects:
+
+        if isinstance(obj, StartCP):
+            continue
+
         if pygame.sprite.collide_mask(player, obj):
             collided_object = obj
             break
@@ -260,6 +293,7 @@ def handle_move(player, objects):
         player.move_right(PLAYER_VEL)
 
     vertical_collide = handle_vertical_collision(player, objects, player.y_vel)
+
     to_check = [collide_left, collide_right, *vertical_collide]
 
     for obj in to_check:
@@ -272,11 +306,13 @@ def main(window):
 
     block_size = 96
 
-    player = Player(100, 100, 50, 50)
-    fire = Fire(170, HEIGHT - block_size - 64, 16, 32)
+    player = Player(155, 100, 50, 50)
+    fire = Fire(300, HEIGHT - block_size - 64, 16, 32)
     fire1 = Fire(500, HEIGHT - block_size - 64, 16, 32) 
     fire.off()
     fire1.on()
+    checkpoint = StartCP(100, HEIGHT - block_size - 128, 64, 64)
+
     floor = [Block(i * block_size, HEIGHT - block_size, block_size)
              for i in range(-WIDTH // block_size, (WIDTH * 2) // block_size)]
     objects = [*floor, Block(0, HEIGHT - block_size * 2, block_size),
@@ -284,7 +320,8 @@ def main(window):
                Block(block_size * 4, HEIGHT - block_size * 4, block_size),
                Block(block_size * 5, HEIGHT - block_size * 4, block_size),
                Block(block_size * 6, HEIGHT - block_size * 4, block_size),
-               Block(block_size * 6, HEIGHT - block_size * 5, block_size), 
+               Block(block_size * 6, HEIGHT - block_size * 5, block_size),
+               checkpoint,
                fire, fire1]
 
     offset_x = 0
@@ -306,6 +343,7 @@ def main(window):
         player.loop(FPS)
         fire.loop()
         fire1.loop()
+        checkpoint.loop()
         handle_move(player, objects)
         draw(window, background, bg_image, player, objects, offset_x)
 
