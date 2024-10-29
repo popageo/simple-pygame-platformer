@@ -55,7 +55,7 @@ class StartCP(Object):
 
     def __init__(self, x, y, width, height):
         super().__init__(x, y, width, height, "Start")
-        self.startcp = load_sprite_sheets("Items", "Checkpoints\Start", width, height)
+        self.startcp = load_sprite_sheets("Items", "Checkpoints/Start", width, height)
         self.image = self.startcp["Start (Moving) (64x64)"][0]
         self.mask = pygame.mask.from_surface(self.image)
         self.animation_count = 0
