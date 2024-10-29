@@ -248,8 +248,8 @@ def handle_vertical_collision(player, objects, dy):
     collided_objects = []
     for obj in objects:
 
-        if isinstance(obj, StartCP):
-            continue
+        # if isinstance(obj, StartCP):
+        #     continue
       
         if pygame.sprite.collide_mask(player, obj):
             if dy > 0:
@@ -269,8 +269,8 @@ def collide(player, objects, dx):
     collided_object = None
     for obj in objects:
 
-        if isinstance(obj, StartCP):
-            continue
+        # if isinstance(obj, StartCP):
+        #     continue
 
         if pygame.sprite.collide_mask(player, obj):
             collided_object = obj
